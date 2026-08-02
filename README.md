@@ -76,7 +76,7 @@ You can easily customize:
 
 ---
 
-# 🛠 Built With
+# 🛠 Built With ✨
 
 - SVG
 - SVG Animations
