@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ AI Activity Matrix
+# ⚡ AI Activity Matrix ⚡
 
 ### A premium animated SVG inspired by GitHub's contribution graph for modern GitHub Profile READMEs.
 
