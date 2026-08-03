@@ -62,7 +62,7 @@ Embed the SVG directly into your GitHub Profile README.
 
 ---
 
-# 🎨 Customization
+# 🎨 Customization 
 
 You can easily customize:
 
@@ -78,7 +78,7 @@ You can easily customize:
 
 # 🛠 Built With ✨
 
-- SVG
+- SVG( Scalable Vector Graphics)
 - SVG Animations
 - GitHub Markdown
 
