@@ -27,7 +27,7 @@
 
 ---
 
-# 📸 Preview
+# 📸 Preview of SVG
 
 <p align="center">
     <img src="./contribution_grid_ai_matrix.svg" width="100%">
