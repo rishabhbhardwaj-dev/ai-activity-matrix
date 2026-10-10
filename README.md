@@ -1,4 +1,4 @@
-<div align="center">
+ <div align="center">
 
 # ⚡ AI Activity Matrix ⚡
 
@@ -21,21 +21,47 @@
 - 🎨 Animated SVG inspired by GitHub's contribution graph
 - ⚡ Lightweight and responsive
 - 🧩 Easy to embed into any GitHub Profile README
-- 🎯 Pure SVG (No JavaScript)
+- 🎯 Pure SVG — no JavaScript required
 - 🌙 Dark theme compatible
 - 🚀 Open source and customizable
 
 ---
 
-# 📸 Preview of SVG
+## 👤 Connect With Me
 
-<p align="center">
-    <img src="./contribution_grid_ai_matrix.svg" width="100%">
-</p>
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <h3>GitHub</h3>
+      <a href="https://github.com/rishabhbhardwaj-dev">
+        <img src="https://github-readme-stats.vercel.app/api?username=rishabhbhardwaj-dev&show_icons=true&hide_border=true&theme=github_dark" alt="GitHub profile statistics for Rishabh Bhardwaj" width="100%"/>
+      </a>
+      <br/><br/>
+      <a href="https://github.com/rishabhbhardwaj-dev">
+        <img src="https://img.shields.io/badge/Visit_GitHub_Profile-181717?style=for-the-badge&logo=github&logoColor=white" alt="Visit GitHub Profile"/>
+      </a>
+    </td>
+    <td align="center" width="50%">
+      <h3>LinkedIn</h3>
+      <a href="https://www.linkedin.com/in/rishabhbhardwaj-tech/">
+        <img src="https://img.shields.io/badge/Rishabh_Bhardwaj-Connect_on_LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="Rishabh Bhardwaj LinkedIn profile"/>
+      </a>
+      <br/><br/>
+      <p>Connect with me professionally.</p>
+      <a href="https://www.linkedin.com/in/rishabhbhardwaj-tech/">
+        <img src="https://img.shields.io/badge/View_LinkedIn_Profile-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="Visit LinkedIn Profile"/>
+      </a>
+    </td>
+  </tr>
+</table>
+
+</div>
 
 ---
 
-# 🚀 Usage of this SVG header
+## 🚀 Usage
 
 Embed the SVG directly into your GitHub Profile README.
 
@@ -51,7 +77,7 @@ Embed the SVG directly into your GitHub Profile README.
 
 ---
 
-# 📂 Repository Structure
+## 📂 Repository Structure
 
 ```text
 .
@@ -62,7 +88,7 @@ Embed the SVG directly into your GitHub Profile README.
 
 ---
 
-# 🎨 Customization 
+## 🎨 Customization
 
 You can easily customize:
 
@@ -76,15 +102,15 @@ You can easily customize:
 
 ---
 
-# 🛠 Built With ✨
+## 🛠 Built With
 
-- SVG( Scalable Vector Graphics)
+- SVG (Scalable Vector Graphics)
 - SVG Animations
 - GitHub Markdown
 
 ---
 
-# 💡 Future Components
+## 💡 Future Components
 
 This repository will gradually evolve into a collection of premium GitHub SVG components.
 
@@ -99,11 +125,9 @@ Planned additions include:
 
 ---
 
-# ⭐ Support
+## ⭐ Support
 
-If you found this useful,
-
-consider giving the repository a ⭐.
+If you found this useful, consider giving the repository a ⭐.
 
 It helps others discover the project.
 
