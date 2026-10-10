@@ -2,11 +2,7 @@
 
 # ⚡ AI Activity Matrix ⚡
 
-### A premium animated SVG inspired by GitHub's contribution graph for modern GitHub Profile READMEs.
 
-<p>
-  <img src="./contribution_grid_ai_matrix.svg" width="100%" alt="AI Activity Matrix Preview"/>
-</p>
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/rishabhbhardwaj-dev/ai-activity-matrix?style=for-the-badge)
 ![GitHub forks](https://img.shields.io/github/forks/rishabhbhardwaj-dev/ai-activity-matrix?style=for-the-badge)
@@ -32,6 +28,16 @@
 <p align="center">
     <img src="./contribution_grid_ai_matrix.svg" width="100%">
 </p>
+
+---
+# 📸 Preview of github_card
+
+<p align="center">
+    <img src="https://github.com/rishabhbhardwaj-dev/ai-activity-matrix/blob/main/kado-rishabhbhardwaj-dev-github%20(1).png">
+</p>
+
+
+
 
 ---
 
