@@ -41,7 +41,7 @@
 
 ---
 
-# 🚀 Usage of this SVG header
+# 🚀 Usage of this SVG header ..
 
 Embed the SVG directly into your GitHub Profile README.
 
