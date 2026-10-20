@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lantern — Forecast the signal in your pipeline</title>
+<meta name="description" content="Lantern connects pipeline movement, rep context, and revenue risk in one operating view — so your team can forecast with evidence.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --canvas:#080A0F;
+  --s1:#10141D;
+  --s2:#171D28;
+  --border:#252D3A;
+  --ink:#F5F7FA;
+  --muted:#8893A5;
+  --faint:#566172;
+  --volt:#B9FF5C;
+  --volt-soft:#E8FFC1;
+  --info:#6ED8FF;
+  --risk:#FF8A72;
+  --focus:#C3A6FF;
+  --light:#F3F6EF;
+  --light-ink:#080A0F;
+  --light-muted:#4B5563;
+
+  --f-display:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
+  --f-body:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+
+  --max:1280px;
+  --gutter:48px;
+  --r-lg:20px;
+  --r-md:12px;
+  --r-sm:8px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--canvas);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
+.light-zone :focus-visible{outline-color:var(--light-ink)}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
+.eyebrow{
+  font-family:var(--f-mono);font-size:11px;font-weight:500;line-height:1.2;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 20px;
+}
+.eyebrow .dot{color:var(--volt)}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0}
+.h-xl{font-size:64px;font-weight:600;line-height:.98;letter-spacing:-.03em}
+.h-lg{font-size:48px;font-weight:600;line-height:1.02;letter-spacing:-.025em}
+.h-md{font-size:30px;font-weight:600;line-height:1.12;letter-spacing:-.015em}
+.body-lg{font-size:19px;line-height:1.55;color:var(--muted);margin:0}
+.body-sm{font-size:14px;line-height:1.45;color:var(--muted);margin:0}
+.mono{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+
+/* ============================================================
+   BUTTONS / LINKS
+   ============================================================ */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--f-body);font-size:14px;font-weight:600;line-height:1;
+  border-radius:9999px;padding:0 20px;min-height:44px;
+  transition:background-color .18s var(--ease),transform .18s var(--ease),color .18s var(--ease);
+}
+.btn-primary{background:var(--volt);color:#080A0F}
+.btn-primary:hover{background:var(--volt-soft);transform:translateY(-1px)}
+.btn-primary:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.btn-ghost{color:var(--ink);border:1px solid var(--border);padding:0 18px}
+.btn-ghost:hover{background:var(--s2);border-color:#313B4B}
+.tlink{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:14px;font-weight:600;color:var(--volt);
+}
+.tlink svg{transition:transform .18s var(--ease)}
+.tlink:hover{text-decoration:underline;text-underline-offset:4px}
+.tlink:hover svg{transform:translateX(4px)}
+
+.badge{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--f-mono);font-size:10px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);background:var(--s1);border:1px solid var(--border);
+  border-radius:9999px;padding:6px 10px;
+}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:var(--volt);flex:none}
+.badge .dot.info{background:var(--info)}
+.badge .dot.risk{background:var(--risk)}
+.badge .dot.focus{background:var(--focus)}
+.light-zone .badge{background:transparent;border-color:rgba(8,10,15,.16);color:var(--light-muted)}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+.nav{
+  position:fixed;inset:0 0 auto 0;z-index:80;height:72px;
+  display:flex;align-items:center;
+  background:transparent;border-bottom:1px solid transparent;
+  transition:background-color .3s var(--ease),border-color .3s var(--ease),backdrop-filter .3s var(--ease);
+}
+.nav.stuck{background:rgba(8,10,15,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom-color:var(--border)}
+.nav-inner{max-width:var(--max);margin:0 auto;padding:0 var(--gutter);width:100%;display:flex;align-items:center;gap:32px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--f-display);font-size:18px;font-weight:700;letter-spacing:-.01em}
+.brand .beacon{width:6px;height:6px;border-radius:50%;background:var(--volt);flex:none;box-shadow:0 0 10px rgba(185,255,92,.7)}
+.nav-links{display:flex;gap:28px;margin-left:24px}
+.nav-links a{font-size:14px;font-weight:500;color:var(--muted);transition:color .18s var(--ease)}
+.nav-links a:hover{color:var(--ink)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:18px}
+.nav-right .signin{font-size:14px;font-weight:500;color:var(--muted);transition:color .18s}
+.nav-right .signin:hover{color:var(--ink)}
+.menu-btn{display:none;width:44px;height:44px;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:var(--r-sm)}
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;z-index:79;background:rgba(8,10,15,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:20px 24px 28px}
+.mobile-menu.open{display:block}
+.mobile-menu a{display:block;padding:14px 0;font-size:16px;border-bottom:1px solid var(--border)}
+.mobile-menu .btn{margin-top:20px;width:100%;justify-content:center}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{position:relative;min-height:820px;padding:152px 0 120px;overflow:hidden}
+.hero::before{
+  content:"";position:absolute;top:-120px;right:-6%;width:900px;height:900px;pointer-events:none;
+  background:radial-gradient(circle at center,rgba(185,255,92,.10),rgba(185,255,92,0) 62%);
+}
+.hero-grid{
+  position:relative;display:grid;grid-template-columns:repeat(12,1fr);gap:32px;align-items:start;
+  max-width:var(--max);margin:0 auto;padding:0 var(--gutter);
+}
+.hero-copy{grid-column:1/6;padding-top:24px}
+.hero-vis{grid-column:6/13;position:relative;margin-right:-8vw}
+h1.hero-h{font-family:var(--f-display);font-size:clamp(48px,6.6vw,112px);font-weight:600;line-height:.92;letter-spacing:-.045em;margin:0 0 28px}
+.swap{display:inline-block;position:relative;overflow:hidden;vertical-align:bottom}
+.swap span{display:block}
+.swap .out{position:absolute;inset:0}
+.hero-sub{max-width:420px;margin:0 0 36px;font-size:19px;line-height:1.55;color:var(--muted)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.hero-trust{margin:32px 0 0;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;color:var(--faint);text-transform:uppercase}
+
+/* forecast instrument */
+.instrument{
+  position:relative;background:var(--s1);border:1px solid var(--border);border-radius:var(--r-lg);
+  min-height:520px;min-width:720px;padding:0;overflow:hidden;
+}
+.inst-head{
+  height:48px;display:flex;align-items:center;gap:14px;padding:0 20px;
+  border-bottom:1px solid var(--border);background:rgba(255,255,255,.014);
+}
+.dots{display:flex;gap:6px}
+.dots i{width:6px;height:6px;border-radius:50%;background:#2C3542;display:block}
+.dots i:first-child{background:#3A4353}
+.inst-head .t{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.inst-head .live{margin-left:auto;display:flex;align-items:center;gap:7px;font-family:var(--f-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
+.inst-head .live .dot{width:6px;height:6px;border-radius:50%;background:var(--volt);animation:pulse 2.4s var(--ease) infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.inst-body{display:grid;grid-template-columns:1fr 232px;min-height:470px}
+.inst-main{padding:24px 24px 18px;border-right:1px solid var(--border);display:flex;flex-direction:column}
+.kpi-row{display:flex;gap:36px;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap}
+.kpi .v{font-family:var(--f-display);font-size:42px;font-weight:600;line-height:1;letter-spacing:-.03em;display:block}
+.kpi .v.volt{color:var(--volt)}
+.kpi .l{font-family:var(--f-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);display:block;margin-top:9px}
+.kpi .s{font-family:var(--f-mono);font-size:11px;color:var(--muted);display:block;margin-top:5px}
+
+.chart-wrap{position:relative;flex:1;min-height:230px}
+.chart{width:100%;height:100%;display:block;overflow:visible}
+.grid-line{stroke:var(--border);stroke-width:1}
+.axis-t{font-family:var(--f-mono);font-size:9px;fill:var(--faint);letter-spacing:.08em}
+.actual{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fore{fill:none;stroke:var(--volt);stroke-width:2;stroke-linecap:round;stroke-dasharray:5 5}
+.band{fill:var(--volt);opacity:.12}
+.node-end{fill:var(--volt)}
+.node-glow{fill:var(--volt);opacity:.18}
+.today{stroke:var(--faint);stroke-width:1;stroke-dasharray:3 4}
+
+.inst-rail{padding:18px 16px;display:flex;flex-direction:column;min-width:0}
+.rail-title{font-family:var(--f-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin:0 0 12px;display:flex;justify-content:space-between}
+.rail-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.rail-list li{
+  display:flex;align-items:center;gap:8px;min-height:24px;
+  font-family:var(--f-mono);font-size:11px;color:var(--muted);
+  opacity:0;transform:translateY(12px);
+}
+.rail-list li.in{opacity:1;transform:none;transition:opacity .28s var(--ease),transform .28s var(--ease)}
+.rail-list .d{width:5px;height:5px;border-radius:50%;background:var(--info);flex:none}
+.rail-list .d.v{background:var(--volt)}
+.rail-list .d.r{background:var(--risk)}
+.rail-list .d.f{background:var(--focus)}
+.rail-list .m{color:var(--faint);margin-left:auto;font-size:10px}
+.rail-list .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.hero-float{
+  position:absolute;left:-46px;bottom:56px;display:flex;flex-direction:column;gap:8px;
+}
+
+/* ============================================================
+   SIGNAL STRIP
+   ============================================================ */
+.strip{border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.strip-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.strip-grid .cell{padding:36px 28px 34px;border-left:1px solid var(--border)}
+.strip-grid .cell:first-child{border-left:0;padding-left:0}
+.strip-grid .v{font-family:var(--f-mono);font-size:32px;font-weight:500;line-height:1;letter-spacing:-.02em;display:block}
+.strip-grid .l{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);display:block;margin-top:14px}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+section{position:relative}
+.sec{padding:160px 0}
+.sec-tight{padding:128px 0}
+.grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:32px}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .65s var(--ease),transform .65s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+.reveal-d1{transition-delay:.08s}
+.reveal-d2{transition-delay:.16s}
+.reveal-d3{transition-delay:.24s}
+
+/* ============================================================
+   CONNECTOR
+   ============================================================ */
+.conn-copy{grid-column:1/6}
+.conn-vis{grid-column:6/13;position:relative;margin-right:-4vw;min-height:440px}
+.conn-svg{width:100%;height:auto;display:block;overflow:visible}
+.ring{fill:none;stroke:var(--border);stroke-width:1.5}
+.ring-dot{fill:var(--info)}
+.ring-label{font-family:var(--f-mono);font-size:10px;letter-spacing:.09em;fill:var(--ink);text-transform:uppercase}
+.ring-sub{font-family:var(--f-mono);font-size:9px;fill:var(--faint);letter-spacing:.06em}
+.conn-path{fill:none;stroke:var(--border);stroke-width:1}
+.pulse{fill:var(--volt)}
+.core{fill:var(--s2);stroke:var(--volt);stroke-width:1.5}
+.core-t{font-family:var(--f-display);font-size:13px;font-weight:600;fill:var(--ink)}
+.conn-badges{position:absolute;inset:0;pointer-events:none}
+.conn-badges .badge{position:absolute;pointer-events:auto;background:rgba(8,10,15,.85);backdrop-filter:blur(6px)}
+.b1{top:6px;left:0}
+.b2{top:44%;right:2%}
+.b3{bottom:16%;left:6%}
+.b4{bottom:0;right:12%}
+
+/* ============================================================
+   FEATURE LADDER
+   ============================================================ */
+.feat{
+  display:grid;grid-template-columns:repeat(12,1fr);gap:32px;align-items:center;
+  padding:56px 0;border-top:1px solid var(--border);
+}
+.feat .side{grid-column:1/5}
+.feat .vis{grid-column:6/13}
+.feat.flip .side{grid-column:9/13;order:2}
+.feat.flip .vis{grid-column:1/8;order:1}
+.feat-num{font-family:var(--f-mono);font-size:42px;font-weight:500;color:var(--faint);line-height:1;letter-spacing:-.02em;display:block;margin-bottom:22px}
+.feat h3{margin:0 0 16px}
+.feat p{color:var(--muted);margin:0 0 26px;max-width:38ch}
+
+.surface{
+  background:var(--s1);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:22px;transition:transform .18s var(--ease),border-color .18s var(--ease),background-color .18s var(--ease);
+}
+.surface:hover{transform:translateY(-4px);border-color:#313B4B;background:var(--s2)}
+.surf-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.surf-title{font-family:var(--f-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
+
+.deal{display:flex;align-items:center;gap:14px;padding:13px 14px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--canvas);margin-bottom:8px}
+.deal .nm{font-size:14px;font-weight:500}
+.deal .meta{font-family:var(--f-mono);font-size:10px;color:var(--faint);letter-spacing:.06em}
+.deal .st{margin-left:auto;font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.st.risk{color:var(--risk)}
+.st.watch{color:var(--focus)}
+.st.good{color:var(--volt)}
+
+.conf-track{position:relative;height:8px;border-radius:9999px;background:var(--border);margin:30px 0 12px}
+.conf-fill{position:absolute;inset:0 auto 0 0;width:82%;border-radius:9999px;background:var(--volt)}
+.conf-range{position:absolute;top:-7px;height:22px;border-left:1px solid var(--faint);border-right:1px solid var(--faint);background:rgba(255,255,255,.04)}
+.conf-legend{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:10px;color:var(--faint);letter-spacing:.07em;text-transform:uppercase}
+.chan{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--border);font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.chan .bar{flex:1;height:3px;background:var(--border);border-radius:2px;position:relative;overflow:hidden}
+.chan .bar i{position:absolute;inset:0 auto 0 0;background:var(--info);border-radius:2px;display:block}
+.chan .bar i.v{background:var(--volt)}
+.chan .bar i.f{background:var(--focus)}
+.chan .val{width:52px;text-align:right;color:var(--ink)}
+
+.agenda{list-style:none;margin:0;padding:0}
+.agenda li{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border);font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.agenda li:first-child{border-top:0}
+.agenda .check{width:14px;height:14px;border:1px solid var(--faint);border-radius:3px;flex:none;display:grid;place-items:center}
+.agenda .check.on{border-color:var(--volt);background:rgba(185,255,92,.12)}
+.agenda .check.on::after{content:"";width:6px;height:3px;border-left:1.5px solid var(--volt);border-bottom:1.5px solid var(--volt);transform:rotate(-45deg) translate(0,-1px)}
+.agenda .time{margin-left:auto;color:var(--faint);font-size:10px}
+
+/* ============================================================
+   SCENARIO (light)
+   ============================================================ */
+.light-zone{background:var(--light);color:var(--light-ink)}
+.light-zone .eyebrow{color:var(--light-muted)}
+.light-zone .body-lg,.light-zone .body-sm{color:var(--light-muted)}
+.scen-grid{display:grid;grid-template-columns:28% 1fr;gap:64px;align-items:start}
+.scen-copy{position:sticky;top:120px}
+.scen-copy h2{margin:0 0 22px}
+.scen-note{margin-top:34px;padding-top:22px;border-top:1px solid rgba(8,10,15,.14);font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;color:var(--light-muted);text-transform:uppercase}
+
+.scen-panel{
+  background:#FFFFFF;border:1px solid rgba(8,10,15,.12);border-radius:var(--r-lg);padding:34px;
+}
+.scen-panel .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.scen-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding-bottom:28px;border-bottom:1px solid rgba(8,10,15,.1)}
+.sm .v{font-family:var(--f-display);font-size:38px;font-weight:600;letter-spacing:-.03em;line-height:1;display:block;transition:color .18s}
+.sm .v.hot{color:#4E8A00}
+.sm .l{font-family:var(--f-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--light-muted);display:block;margin-top:10px}
+.scen-chart{margin:28px 0 8px}
+.ctrl{margin-top:26px;padding-top:26px;border-top:1px solid rgba(8,10,15,.1)}
+.ctrl-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
+.ctrl-head label{font-family:var(--f-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--light-muted)}
+.ctrl-head .pct{font-family:var(--f-mono);font-size:14px;font-weight:500;color:var(--light-ink)}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent;cursor:pointer;margin:0;
+}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:9999px;background:rgba(8,10,15,.14)}
+input[type=range]::-moz-range-track{height:6px;border-radius:9999px;background:rgba(8,10,15,.14)}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;
+  background:var(--light-ink);border:3px solid var(--volt);margin-top:-9px;
+}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--light-ink);border:3px solid var(--volt)}
+.ticks{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:10px;color:var(--light-muted);letter-spacing:.06em}
+.scen-out{
+  margin-top:22px;font-family:var(--f-body);font-size:15px;color:var(--light-muted);
+  min-height:26px;transition:opacity .2s;
+}
+.scen-out b{color:var(--light-ink);font-weight:600}
+
+/* ============================================================
+   USE CASES
+   ============================================================ */
+.uc-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:32px;align-items:start}
+.uc-left{grid-column:1/7}
+.uc-right{grid-column:7/13}
+.seg{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--s1);margin-bottom:36px;flex-wrap:wrap}
+.seg button{
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  padding:10px 16px;border-radius:6px;color:var(--muted);min-height:40px;
+  transition:background-color .18s var(--ease),color .18s var(--ease);
+}
+.seg button[aria-selected=true]{background:var(--s2);color:var(--ink)}
+.seg button:hover{color:var(--ink)}
+.uc-rows{list-style:none;margin:0;padding:0}
+.uc-rows li{
+  min-height:72px;display:flex;align-items:center;gap:18px;
+  border-top:1px solid var(--border);border-left:2px solid transparent;
+  padding:14px 0 14px 18px;
+  transition:border-color .18s var(--ease),background-color .18s var(--ease),padding-left .18s var(--ease);
+  font-family:var(--f-mono);font-size:13px;letter-spacing:.02em;color:var(--muted);
+  opacity:0;transform:translateY(10px);
+}
+.uc-rows li.in{opacity:1;transform:none;transition:opacity .35s var(--ease),transform .35s var(--ease),border-color .18s var(--ease),background-color .18s var(--ease)}
+.uc-rows li:hover{border-left-color:var(--volt);background:rgba(255,255,255,.018);padding-left:24px}
+.uc-rows li .ix{font-size:10px;color:var(--faint);width:24px;flex:none}
+.uc-rows li .ar{margin-left:auto;color:var(--faint);display:flex}
+
+/* ============================================================
+   PROOF
+   ============================================================ */
+.proof-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:32px;align-items:start}
+.proof-l{grid-column:1/7}
+.proof-r{grid-column:8/13}
+blockquote{margin:0 0 32px;font-family:var(--f-display);font-size:34px;font-weight:500;line-height:1.18;letter-spacing:-.02em}
+.attrib{display:flex;align-items:center;gap:14px;margin-bottom:44px}
+.attrib .av{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--s1);display:grid;place-items:center;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.attrib .who{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;color:var(--faint);text-transform:uppercase;line-height:1.5}
+.attrib .who b{display:block;color:var(--ink);font-weight:500}
+.proof-points{list-style:none;margin:0 0 36px;padding:0}
+.proof-points li{display:flex;gap:14px;align-items:flex-start;padding:18px 0;border-top:1px solid var(--border);font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.proof-points li .d{width:5px;height:5px;border-radius:50%;background:var(--volt);margin-top:8px;flex:none}
+.spark-wrap{border:1px solid var(--border);border-radius:var(--r-md);background:var(--s1);padding:20px 22px}
+.evidence{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--s1);padding:28px;min-height:420px;display:flex;flex-direction:column}
+.ev-svg{width:100%;flex:1;display:block;overflow:visible}
+
+/* ============================================================
+   FINAL CTA
+   ============================================================ */
+.final{position:relative;overflow:hidden;padding:150px 0 130px;border-top:1px solid var(--border)}
+.rail-band{
+  position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+  height:180px;overflow:hidden;opacity:.5;pointer-events:none;
+  mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
+}
+.rail-band::before,.rail-band::after{content:"";position:absolute;left:0;right:0;height:1px;background:var(--border)}
+.rail-band::before{top:0}
+.rail-band::after{bottom:0}
+.rail-move{display:flex;gap:0;width:max-content;animation:railrun 42s linear infinite}
+.rail-band.paused .rail-move{animation-play-state:paused}
+@keyframes railrun{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.rail-item{
+  display:flex;align-items:center;gap:10px;padding:0 28px;height:180px;
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;color:var(--faint);white-space:nowrap;
+}
+.rail-item .d{width:5px;height:5px;border-radius:50%;background:var(--info);flex:none}
+.rail-item .d.v{background:var(--volt)}
+.rail-item .d.r{background:var(--risk)}
+.rail-item .d.f{background:var(--focus)}
+.final-inner{position:relative;text-align:center}
+.final h2{margin:0 auto 24px;max-width:15ch}
+.final .body-lg{margin:0 auto 38px;max-width:52ch}
+.final .hero-cta{justify-content:center}
+.final .hero-trust{justify-content:center}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer{border-top:1px solid var(--border);padding:72px 0 40px}
+.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px}
+.foot-col h4{font-family:var(--f-mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);margin:0 0 18px;font-weight:500}
+.foot-col ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.foot-col a{font-size:14px;color:var(--muted);transition:color .18s}
+.foot-col a:hover{color:var(--ink)}
+.foot-tag{font-family:var(--f-mono);font-size:11px;letter-spacing:.05em;color:var(--faint);margin:18px 0 0;line-height:1.6}
+.foot-bottom{
+  margin-top:56px;padding-top:24px;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;
+  font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+}
+.foot-bottom .status{display:flex;align-items:center;gap:8px}
+.foot-bottom .status .dot{width:6px;height:6px;border-radius:50%;background:var(--volt)}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:1199px){
+  :root{--gutter:32px}
+  .hero{padding:130px 0 90px;min-height:0}
+  .hero-grid{grid-template-columns:repeat(6,1fr)}
+  .hero-copy{grid-column:1/7}
+  .hero-vis{grid-column:1/7;margin-right:-24px;margin-top:56px}
+  .instrument{min-width:640px}
+  h1.hero-h{font-size:clamp(46px,8vw,84px)}
+  .sec{padding:110px 0}
+  .sec-tight{padding:96px 0}
+  .conn-copy,.conn-vis{grid-column:1/13}
+  .conn-vis{margin-top:56px;margin-right:-16px}
+  .feat .side,.feat .vis,.feat.flip .side,.feat.flip .vis{grid-column:1/13}
+  .feat .side{order:1}.feat .vis{order:2;margin-top:12px}
+  .feat.flip .side{order:1}.feat.flip .vis{order:2}
+  .scen-grid{grid-template-columns:1fr;gap:44px}
+  .scen-copy{position:static}
+  .uc-left,.uc-right{grid-column:1/13}
+  .uc-right{margin-top:12px}
+  .proof-l,.proof-r{grid-column:1/13}
+  .proof-r{margin-top:48px}
+  .nav-links{display:none}
+  .menu-btn{display:flex}
+  .nav{height:64px}
+  .strip-grid{grid-template-columns:repeat(2,1fr)}
+  .strip-grid .cell{border-left:1px solid var(--border);border-top:1px solid var(--border)}
+  .strip-grid .cell:nth-child(odd){border-left:0;padding-left:0}
+  .strip-grid .cell:nth-child(-n+2){border-top:0}
+}
+@media (max-width:767px){
+  :root{--gutter:20px}
+  .h-xl{font-size:42px}
+  .h-lg{font-size:36px}
+  .h-md{font-size:26px}
+  h1.hero-h{font-size:clamp(40px,11vw,60px)}
+  .hero-sub{font-size:17px}
+  .sec{padding:88px 0}
+  .sec-tight{padding:80px 0}
+  .instrument{min-width:0;border-radius:var(--r-md)}
+  .inst-body{grid-template-columns:1fr}
+  .inst-main{border-right:0;border-bottom:1px solid var(--border);padding:20px 18px}
+  .inst-rail{max-height:172px;padding:16px 14px}
+  .rail-list{overflow:hidden}
+  .kpi-row{gap:24px}
+  .kpi .v{font-size:34px}
+  .hero-float{display:none}
+  .hero-vis{margin-right:0}
+  .conn-vis{margin-right:0;min-height:340px}
+  .conn-badges .badge{position:static;margin:0 6px 8px 0}
+  .conn-badges{position:static;display:flex;flex-wrap:wrap;margin-top:20px}
+  .strip-grid{grid-template-columns:1fr}
+  .strip-grid .cell{border-left:0;padding:24px 0}
+  .scen-panel{padding:22px}
+  .scen-metrics{grid-template-columns:repeat(2,1fr);gap:24px 16px}
+  .sm .v{font-size:30px}
+  blockquote{font-size:24px}
+  .foot-grid{grid-template-columns:1fr 1fr}
+  .foot-col:first-child{grid-column:1/3}
+  .uc-rows li{font-size:12px;padding-left:14px}
+  .final{padding:104px 0 96px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+  .reveal{opacity:1;transform:none}
+  .rail-list li{opacity:1;transform:none}
+  .uc-rows li{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top"><span class="beacon" aria-hidden="true"></span>Lantern</a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#product">Product</a>
+      <a href="#connectors">Connectors</a>
+      <a href="#teams">For teams</a>
+      <a href="#proof">Customers</a>
+    </nav>
+    <div class="nav-right">
+      <a class="signin" href="#signin">Sign in</a>
+      <a class="btn btn-primary" href="#start">Start free</a>
+      <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#product">Product</a>
+  <a href="#connectors">Connectors</a>
+  <a href="#teams">For teams</a>
+  <a href="#proof">Customers</a>
+  <a href="#signin">Sign in</a>
+  <a class="btn btn-primary" href="#start">Start free</a>
+</div>
+
+<main id="top">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">Revenue signal intelligence <span class="dot">/</span> 01</p>
+        <h1 class="hero-h"><span class="swap" id="swap"><span class="in" id="swapIn">Find</span></span> the signal in your pipeline.</h1>
+        <p class="hero-sub">Lantern connects pipeline movement, rep context, and revenue risk in one operating view — so your team can forecast with evidence.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#start">Build my forecast</a>
+          <a class="btn btn-ghost" href="#product">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></svg>
+            See how it works
+          </a>
+        </div>
+        <p class="hero-trust">
+          <span>No credit card</span><span>Connect your CRM in minutes</span><span>Built for revenue teams</span>
+        </p>
+      </div>
+
+      <div class="hero-vis">
+        <div class="instrument" id="instrument">
+          <div class="inst-head">
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="t">Lantern Forecast</span>
+            <span class="t" style="color:var(--faint)">Q3 / North America</span>
+            <span class="live"><span class="dot"></span>Live</span>
+          </div>
+          <div class="inst-body">
+            <div class="inst-main">
+              <div class="kpi-row">
+                <div class="kpi">
+                  <span class="v volt" id="heroConf">82%</span>
+                  <span class="l">Forecast confidence</span>
+                  <span class="s">Range 78–86%</span>
+                </div>
+                <div class="kpi">
+                  <span class="v" id="heroUpside">+$180K</span>
+                  <span class="l">Upside identified</span>
+                  <span class="s">vs. commit $2.22M</span>
+                </div>
+                <div class="kpi">
+                  <span class="v">27</span>
+                  <span class="l">Days remaining</span>
+                  <span class="s">Closes 28 Sep</span>
+                </div>
+              </div>
+
+              <div class="chart-wrap">
+                <svg class="chart" viewBox="0 0 640 260" role="img" aria-labelledby="chartTitle chartDesc" preserveAspectRatio="none">
+                  <title id="chartTitle">Actual and forecast revenue, quarter to date</title>
+                  <desc id="chartDesc">Actual closed revenue rises steadily to 2.4 million at the current date. The forecast continues upward within a confidence band of 2.56 to 2.98 million by the end of the quarter.</desc>
+                  <g aria-hidden="true">
+                    <line class="grid-line" x1="0" y1="30" x2="640" y2="30"/>
+                    <line class="grid-line" x1="0" y1="90" x2="640" y2="90"/>
+                    <line class="grid-line" x1="0" y1="150" x2="640" y2="150"/>
+                    <line class="grid-line" x1="0" y1="210" x2="640" y2="210"/>
+                    <line class="today" x1="420" y1="14" x2="420" y2="226"/>
+                    <text class="axis-t" x="426" y="22">TODAY</text>
+                    <text class="axis-t" x="0" y="248">JUL</text>
+                    <text class="axis-t" x="150" y="248">AUG</text>
+                    <text class="axis-t" x="310" y="248">SEP</text>
+                    <text class="axis-t" x="560" y="248">CLOSE</text>
+                  </g>
+                  <polygon class="band" id="foreBand" points="420,120 620,44 620,112 420,132"/>
+                  <path class="actual" id="actualPath" d="M8,222 L60,206 L112,198 L164,172 L216,166 L268,140 L320,132 L372,126 L420,118"/>
+                  <path class="fore" id="forePath" d="M420,118 L480,104 L540,82 L620,56"/>
+                  <circle class="node-glow" id="endGlow" cx="620" cy="56" r="12"/>
+                  <circle class="node-end" id="endNode" cx="620" cy="56" r="5"/>
+                  <circle class="node-end" cx="420" cy="118" r="4"/>
+                </svg>
+              </div>
+            </div>
+
+            <aside class="inst-rail" aria-label="Recent source events">
+              <p class="rail-title"><span>Source events</span><span>18 → 1 view</span></p>
+              <ul class="rail-list" id="railList"></ul>
+            </aside>
+          </div>
+        </div>
+
+        <div class="hero-float">
+          <span class="badge"><span class="dot"></span>12 connected</span>
+          <span class="badge"><span class="dot info"></span>Sync 42 sec ago</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SIGNAL STRIP ================= -->
+  <section class="strip" aria-label="Product facts">
+    <div class="wrap">
+      <div class="strip-grid">
+        <div class="cell"><span class="v">18&nbsp;&rarr;&nbsp;1</span><span class="l">Sources to one view</span></div>
+        <div class="cell"><span class="v">11 hrs</span><span class="l">Saved per manager weekly</span></div>
+        <div class="cell"><span class="v">94%</span><span class="l">Forecast accuracy</span></div>
+        <div class="cell"><span class="v">3&times;</span><span class="l">Faster pipeline review</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONNECTORS ================= -->
+  <section class="sec" id="connectors">
+    <div class="wrap">
+      <div class="grid12">
+        <div class="conn-copy">
+          <p class="eyebrow reveal">Connection layer <span class="dot">/</span> 02</p>
+          <h2 class="h-xl reveal reveal-d1">18 sources.<br>One operating view.</h2>
+          <p class="body-lg reveal reveal-d2" style="margin:28px 0 32px;max-width:42ch">Bring CRM activity, rep notes, product usage, billing, and hiring signals into one shared model. No tab archaeology. No mystery totals.</p>
+          <a class="tlink reveal reveal-d3" href="#connectors">
+            Explore integrations
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+
+        <div class="conn-vis reveal reveal-d2">
+          <svg class="conn-svg" id="connSvg" viewBox="0 0 620 440" role="img" aria-labelledby="connTitle connDesc">
+            <title id="connTitle">Integration connection diagram</title>
+            <desc id="connDesc">Salesforce, HubSpot, and Snowflake feed pipeline and revenue events into the Lantern forecast core.</desc>
+            <path class="conn-path" id="cp1" d="M150,120 C210,150 220,190 268,214"/>
+            <path class="conn-path" id="cp2" d="M470,110 C400,150 350,170 300,206"/>
+            <path class="conn-path" id="cp3" d="M452,330 C380,300 330,270 302,242"/>
+
+            <circle class="pulse" r="3.5"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#cp1"/></animateMotion></circle>
+            <circle class="pulse" r="3.5" style="fill:#6ED8FF"><animateMotion dur="3s" begin="0.6s" repeatCount="indefinite"><mpath href="#cp2"/></animateMotion></circle>
+            <circle class="pulse" r="3.5" style="fill:#C3A6FF"><animateMotion dur="3.4s" begin="1.1s" repeatCount="indefinite"><mpath href="#cp3"/></animateMotion></circle>
+
+            <!-- source rings -->
+            <g>
+              <circle class="ring" cx="112" cy="96" r="54"/>
+              <circle class="ring-dot" cx="112" cy="42" r="3.5"/>
+              <text class="ring-label" x="112" y="92" text-anchor="middle">Salesforce</text>
+              <text class="ring-sub" x="112" y="110" text-anchor="middle">STAGE + CLOSE DATE</text>
+            </g>
+            <g>
+              <circle class="ring" cx="492" cy="82" r="48"/>
+              <circle class="ring-dot" cx="492" cy="34" r="3.5"/>
+              <text class="ring-label" x="492" y="78" text-anchor="middle">HubSpot</text>
+              <text class="ring-sub" x="492" y="96" text-anchor="middle">ACTIVITY + OWNER</text>
+            </g>
+            <g>
+              <circle class="ring" cx="472" cy="352" r="52"/>
+              <circle class="ring-dot" cx="472" cy="300" r="3.5" style="fill:#C3A6FF"/>
+              <text class="ring-label" x="472" y="348" text-anchor="middle">Snowflake</text>
+              <text class="ring-sub" x="472" y="366" text-anchor="middle">USAGE + BILLING</text>
+            </g>
+
+            <!-- core -->
+            <circle class="core" cx="285" cy="226" r="40"/>
+            <circle cx="285" cy="182" r="3.5" fill="#B9FF5C"/>
+            <text class="core-t" x="285" y="231" text-anchor="middle">Lantern</text>
+            <text class="ring-sub" x="285" y="248" text-anchor="middle">FORECAST CORE</text>
+          </svg>
+
+          <div class="conn-badges">
+            <span class="badge b1"><span class="dot"></span>12 connected</span>
+            <span class="badge b2"><span class="dot info"></span>0 duplicate contacts</span>
+            <span class="badge b3"><span class="dot info"></span>Sync 42 sec ago</span>
+            <span class="badge b4"><span class="dot"></span>All systems clear</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEATURE LADDER ================= -->
+  <section class="sec-tight" id="product">
+    <div class="wrap">
+      <div class="grid12" style="margin-bottom:64px">
+        <div style="grid-column:1/7">
+          <p class="eyebrow reveal">The weekly operating layer <span class="dot">/</span> 03</p>
+          <h2 class="h-xl reveal reveal-d1">Clarity,<br>end to end.</h2>
+        </div>
+        <div style="grid-column:8/13;align-self:end">
+          <p class="body-lg reveal reveal-d2">From first signal to committed number: see movement early, understand what changed, and walk into the room with a forecast everyone can defend.</p>
+        </div>
+      </div>
+
+      <!-- 01 -->
+      <article class="feat">
+        <div class="side">
+          <span class="feat-num">01</span>
+          <h3 class="h-md reveal">Know what changed before the number moves.</h3>
+          <p class="reveal reveal-d1">Lantern tracks stage movement, activity decay, close-date drift, and stakeholder silence so risk appears before it reaches the forecast.</p>
+          <a class="tlink reveal reveal-d2" href="#product">See the risk model
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+        <div class="vis">
+          <div class="surface reveal reveal-d1">
+            <div class="surf-head"><span class="surf-title">Deal risk / Q3 priority</span><span class="badge"><span class="dot risk"></span>2 at risk</span></div>
+            <div class="deal"><div><div class="nm">Acme expansion</div><div class="meta">$420,000 · moved out 21 days</div></div><span class="st risk">Close-date drift</span></div>
+            <div class="deal"><div><div class="nm">Northstar Health</div><div class="meta">$186,000 · no reply 12 days</div></div><span class="st risk">Silent stakeholder</span></div>
+            <div class="deal"><div><div class="nm">Meridian logistics</div><div class="meta">$264,000 · activity −48%</div></div><span class="st watch">Activity decay</span></div>
+            <div class="deal"><div><div class="nm">Vela retail group</div><div class="meta">$312,000 · 3 new champions</div></div><span class="st good">Signal rising</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 02 -->
+      <article class="feat flip">
+        <div class="side">
+          <span class="feat-num">02</span>
+          <h3 class="h-md reveal">Forecast with context, not hope.</h3>
+          <p class="reveal reveal-d1">Compare commit, best case, and risk-adjusted scenarios against the underlying evidence — every figure traceable back to source events.</p>
+          <a class="tlink reveal reveal-d2" href="#scenario">Open a scenario
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+        <div class="vis">
+          <div class="surface reveal reveal-d1">
+            <div class="surf-head"><span class="surf-title">Forecast confidence</span><span class="badge"><span class="dot"></span>Range 78–86%</span></div>
+            <div class="conf-track">
+              <div class="conf-fill"></div>
+              <div class="conf-range" style="left:74%;width:16%"></div>
+            </div>
+            <div class="conf-legend"><span>Commit $2.22M</span><span>Weighted $2.40M</span><span>Best $2.98M</span></div>
+            <div style="margin-top:22px">
+              <div class="chan"><span style="width:82px">Enterprise</span><span class="bar"><i class="v" style="width:88%"></i></span><span class="val">$1.24M</span></div>
+              <div class="chan"><span style="width:82px">Mid-market</span><span class="bar"><i style="width:62%"></i></span><span class="val">$0.86M</span></div>
+              <div class="chan"><span style="width:82px">Expansion</span><span class="bar"><i class="f" style="width:41%"></i></span><span class="val">$0.58M</span></div>
+              <div class="chan"><span style="width:82px">New logo</span><span class="bar"><i style="width:24%"></i></span><span class="val">$0.24M</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 03 -->
+      <article class="feat">
+        <div class="side">
+          <span class="feat-num">03</span>
+          <h3 class="h-md reveal">Make the weekly review actionable.</h3>
+          <p class="reveal reveal-d1">Turn pipeline review into a decision session with shared evidence, clear owners, and next actions attached to every deal signal.</p>
+          <a class="tlink reveal reveal-d2" href="#teams">View review workflow
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+        <div class="vis">
+          <div class="surface reveal reveal-d1">
+            <div class="surf-head"><span class="surf-title">Review agenda / Mon 09:00</span><span class="badge"><span class="dot"></span>Clear the room</span></div>
+            <ul class="agenda">
+              <li><span class="check on"></span>Deal movement since last review<span class="time">04:00</span></li>
+              <li><span class="check on"></span>Forecast delta and named owner<span class="time">06:00</span></li>
+              <li><span class="check"></span>Risk exceptions — 2 open<span class="time">08:00</span></li>
+              <li><span class="check"></span>Commit vs. evidence per channel<span class="time">05:00</span></li>
+              <li><span class="check"></span>Next actions assigned<span class="time">02:00</span></li>
+            </ul>
+            <div class="chan" style="margin-top:18px;border-top:1px solid var(--border)"><span style="width:82px">Decision log</span><span class="bar"><i class="v" style="width:76%"></i></span><span class="val">18/24</span></div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================= SCENARIO ================= -->
+  <section class="sec light-zone" id="scenario">
+    <div class="wrap">
+      <div class="scen-grid">
+        <div class="scen-copy">
+          <p class="eyebrow reveal">Forecast control <span class="dot">/</span> 04</p>
+          <h2 class="h-lg reveal reveal-d1">From movement<br>to confidence.</h2>
+          <p class="body-lg reveal reveal-d2">See what changed. Understand why. Decide what happens next.</p>
+          <p class="scen-note reveal reveal-d3">Scenario planning / Q3 North America<br>Baseline commit $2.22M</p>
+        </div>
+
+        <div class="scen-panel reveal reveal-d1">
+          <div class="top">
+            <span class="mono" style="color:var(--light-muted)">Scenario / Q3 / North America</span>
+            <span class="badge"><span class="dot"></span>Live model</span>
+          </div>
+
+          <div class="scen-metrics">
+            <div class="sm"><span class="v" id="mValue">$2.4M</span><span class="l">Expected close value</span></div>
+            <div class="sm"><span class="v hot" id="mConf">82%</span><span class="l">Forecast confidence</span></div>
+            <div class="sm"><span class="v" id="mUpside">+$180K</span><span class="l">Upside identified</span></div>
+            <div class="sm"><span class="v" id="mDays">27</span><span class="l">Days to close</span></div>
+          </div>
+
+          <div class="scen-chart">
+            <svg viewBox="0 0 620 150" style="width:100%;height:auto;display:block" role="img" aria-labelledby="scTitle">
+              <title id="scTitle">Risk-adjusted close value trend across the quarter</title>
+              <line x1="0" y1="30" x2="620" y2="30" stroke="rgba(8,10,15,.1)"/>
+              <line x1="0" y1="80" x2="620" y2="80" stroke="rgba(8,10,15,.1)"/>
+              <line x1="0" y1="130" x2="620" y2="130" stroke="rgba(8,10,15,.1)"/>
+              <polygon points="360,86 600,34 600,74 360,96" fill="#B9FF5C" opacity=".22"/>
+              <polyline points="10,132 70,124 130,116 190,110 250,98 310,94 360,88"
+                fill="none" stroke="#080A0F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+              <polyline id="scFore" points="360,88 440,74 520,58 600,44"
+                fill="none" stroke="#4E8A00" stroke-width="2" stroke-dasharray="5 5" stroke-linecap="round"/>
+              <circle id="scNode" cx="600" cy="44" r="5" fill="#4E8A00"/>
+              <text x="0" y="146" font-family="IBM Plex Mono,monospace" font-size="9" fill="#4B5563">WEEK 1</text>
+              <text x="270" y="146" font-family="IBM Plex Mono,monospace" font-size="9" fill="#4B5563">TODAY</text>
+              <text x="556" y="146" font-family="IBM Plex Mono,monospace" font-size="9" fill="#4B5563">CLOSE</text>
+            </svg>
+          </div>
+
+          <div class="ctrl">
+            <div class="ctrl-head">
+              <label for="prob">Win probability on priority deal</label>
+              <span class="pct" id="probOut">82%</span>
+            </div>
+            <input type="range" id="prob" min="40" max="90" step="1" value="82"
+              aria-describedby="scenOut" aria-valuetext="82 percent win probability">
+            <div class="ticks"><span>40%</span><span>55%</span><span>70%</span><span>90%</span></div>
+            <p class="scen-out" id="scenOut">At <b>82%</b> win probability, the quarter closes at <b>$2.4M</b> with <b>27 days</b> to close.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= USE CASES ================= -->
+  <section class="sec" id="teams">
+    <div class="wrap">
+      <div class="uc-grid">
+        <div class="uc-left">
+          <p class="eyebrow reveal">Who it is for <span class="dot">/</span> 05</p>
+          <h2 class="h-xl reveal reveal-d1">Built for the moments that move the number.</h2>
+          <p class="body-lg reveal reveal-d2" style="margin:28px 0 34px;max-width:36ch">Every team sees the same evidence, framed for the decision they own.</p>
+          <div class="seg reveal reveal-d3" role="tablist" aria-label="Choose a team">
+            <button role="tab" id="tab-lead" aria-selected="true" aria-controls="ucRows" data-seg="lead">Leadership</button>
+            <button role="tab" id="tab-mgr" aria-selected="false" aria-controls="ucRows" data-seg="mgr">Sales managers</button>
+            <button role="tab" id="tab-rev" aria-selected="false" aria-controls="ucRows" data-seg="rev">Revenue operations</button>
+          </div>
+        </div>
+        <div class="uc-right">
+          <ul class="uc-rows" id="ucRows" role="tabpanel" aria-labelledby="tab-lead"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PROOF ================= -->
+  <section class="sec-tight" id="proof">
+    <div class="wrap">
+      <div class="proof-grid">
+        <div class="proof-l">
+          <p class="eyebrow reveal">Operational proof <span class="dot">/</span> 06</p>
+          <blockquote class="reveal reveal-d1">&ldquo;We stopped arguing about which dashboard was right and started deciding what to do next.&rdquo;</blockquote>
+          <div class="attrib reveal reveal-d2">
+            <span class="av" aria-hidden="true">MD</span>
+            <span class="who"><b>Director of Revenue Operations</b>Series C data platform / 240 employees</span>
+          </div>
+          <ul class="proof-points reveal reveal-d2">
+            <li><span class="d"></span>Pipeline changed and we knew why.</li>
+            <li><span class="d"></span>Every forecast has a named owner.</li>
+            <li><span class="d"></span>Monday morning is for decisions, not data cleanup.</li>
+          </ul>
+          <div class="spark-wrap reveal reveal-d3">
+            <div class="surf-head"><span class="surf-title">Forecast accuracy / last 9 quarters</span><span class="badge"><span class="dot"></span>94% current</span></div>
+            <svg viewBox="0 0 420 90" style="width:100%;height:auto;display:block" role="img" aria-labelledby="spTitle">
+              <title id="spTitle">Forecast accuracy improving from 61 percent to 94 percent over nine quarters</title>
+              <polyline points="8,74 58,68 108,60 158,58 208,44 258,38 308,26 358,20 410,12"
+                fill="none" stroke="#B9FF5C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="410" cy="12" r="4" fill="#B9FF5C"/>
+              <circle cx="8" cy="74" r="3" fill="#566172"/>
+              <text x="0" y="88" font-family="IBM Plex Mono,monospace" font-size="9" fill="#566172">61%</text>
+              <text x="378" y="88" font-family="IBM Plex Mono,monospace" font-size="9" fill="#8893A5">94%</text>
+            </svg>
+          </div>
+        </div>
+
+        <div class="proof-r">
+          <div class="evidence reveal reveal-d1">
+            <div class="surf-head"><span class="surf-title">Data assembly / source ring</span><span class="badge"><span class="dot info"></span>18 sources</span></div>
+            <svg class="ev-svg" viewBox="0 0 380 320" role="img" aria-labelledby="evTitle evDesc">
+              <title id="evTitle">Source ring and signal nodes</title>
+              <desc id="evDesc">Sixteen source nodes orbit a central forecast core; confirmed signals are highlighted.</desc>
+              <circle cx="190" cy="160" r="118" fill="none" stroke="#252D3A" stroke-width="1"/>
+              <circle cx="190" cy="160" r="82" fill="none" stroke="#252D3A" stroke-width="1" stroke-dasharray="3 5"/>
+              <circle cx="190" cy="160" r="46" fill="#080A0F" stroke="#B9FF5C" stroke-width="1.5"/>
+              <text x="190" y="156" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-size="13" font-weight="600" fill="#F5F7FA">82%</text>
+              <text x="190" y="174" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="8" fill="#566172" letter-spacing="1">CONFIDENCE</text>
+              <g id="evNodes"></g>
+              <text x="0" y="308" font-family="IBM Plex Mono,monospace" font-size="9" fill="#566172" letter-spacing="1">EVENTS / CONFIRMED</text>
+              <text x="248" y="308" font-family="IBM Plex Mono,monospace" font-size="9" fill="#566172" letter-spacing="1">MODEL / v4.2</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FINAL CTA ================= -->
+  <section class="final" id="start">
+    <div class="rail-band" id="railBand" aria-hidden="true"><div class="rail-move" id="railMove"></div></div>
+    <div class="wrap final-inner">
+      <p class="eyebrow reveal">Start here <span class="dot">/</span> 07</p>
+      <h2 class="h-xl reveal reveal-d1">Turn pipeline noise into forecast confidence.</h2>
+      <p class="body-lg reveal reveal-d2">Connect your CRM and see your first Lantern forecast in under ten minutes.</p>
+      <div class="hero-cta reveal reveal-d3">
+        <a class="btn btn-primary" href="#start">Build my forecast</a>
+        <a class="btn btn-ghost" href="#demo">Book a 20-minute walkthrough</a>
+      </div>
+      <p class="hero-trust">
+        <span>No credit card</span><span>Connect your CRM in minutes</span><span>Built for revenue teams</span>
+      </p>
+    </div>
+  </section>
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-col">
+        <a class="brand" href="#top"><span class="beacon" aria-hidden="true"></span>Lantern</a>
+        <p class="foot-tag">Data clarity for the people<br>responsible for the number.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Product</h4>
+        <ul><li><a href="#product">Forecast</a></li><li><a href="#connectors">Connectors</a></li><li><a href="#teams">Revenue workflows</a></li></ul>
+      </div>
+      <div class="foot-col">
+        <h4>Company</h4>
+        <ul><li><a href="#proof">Customers</a></li><li><a href="#careers">Careers</a></li><li><a href="#contact">Contact</a></li></ul>
+      </div>
+      <div class="foot-col">
+        <h4>Legal</h4>
+        <ul><li><a href="#privacy">Privacy</a></li><li><a href="#terms">Terms</a></li><li><a href="#security">Security</a></li></ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span class="status"><span class="dot"></span>System status / all signals clear</span>
+      <span>© 2026 Lantern Revenue Systems</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- NAV ---------- */
+  var nav = document.getElementById('nav');
+  function onScroll(){ nav.classList.toggle('stuck', window.scrollY > 24); }
+  onScroll();
+  window.addEventListener('scroll', onScroll, {passive:true});
+
+  var menuBtn = document.getElementById('menuBtn'), menu = document.getElementById('mobileMenu');
+  menuBtn.addEventListener('click', function(){
+    var open = menu.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  });
+  menu.addEventListener('click', function(e){
+    if(e.target.tagName === 'A'){ menu.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false'); }
+  });
+
+  /* ---------- HERO: source event rail ---------- */
+  var events = [
+    ['v','New opportunity','Acme expansion','$420K'],
+    ['','Stage moved to Evaluation','Meridian','$264K'],
+    ['r','Renewal risk detected','Northstar','$186K'],
+    ['','Champion added','Vela retail','$312K'],
+    ['f','Usage up 24%','Orbit Labs','$98K'],
+    ['v','Commit raised','Kestrel Co','$155K'],
+    ['','Note tagged: pricing','Halden Group','$74K'],
+    ['r','Close date moved +21d','Acme expansion','$420K'],
+    ['','Billing record matched','Vela retail','$312K'],
+    ['f','Hiring signal: 6 AEs','Orbit Labs','$98K'],
+    ['','Meeting booked','Kestrel Co','$155K'],
+    ['v','Evidence attached','Meridian','$264K']
+  ];
+  var railList = document.getElementById('railList');
+  events.forEach(function(ev){
+    var li = document.createElement('li');
+    li.innerHTML = '<span class="d '+ev[0]+'"></span><span class="txt">'+ev[1]+'</span><span class="m">'+ev[3]+'</span>';
+    li.setAttribute('title', ev[1] + ' — ' + ev[2]);
+    railList.appendChild(li);
+  });
+  var railItems = railList.querySelectorAll('li');
+
+  /* ---------- HERO: forecast assembly ---------- */
+  var actual = document.getElementById('actualPath'),
+      fore   = document.getElementById('forePath'),
+      band   = document.getElementById('foreBand'),
+      endN   = document.getElementById('endNode'),
+      endG   = document.getElementById('endGlow'),
+      swapIn = document.getElementById('swapIn'),
+      swapEl = document.getElementById('swap');
+
+  function sizeSwap(){
+    // reserve width of the longer word so nothing reflows mid-sentence
+    var probe = document.createElement('span');
+    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font:'+getComputedStyle(swapIn).font+';letter-spacing:'+getComputedStyle(swapIn).letterSpacing;
+    document.body.appendChild(probe);
+    probe.textContent = 'Find'; var w1 = probe.getBoundingClientRect().width;
+    probe.textContent = 'Forecast'; var w2 = probe.getBoundingClientRect().width;
+    document.body.removeChild(probe);
+    swapEl.style.width = w1 + 'px';
+    return {w1:w1, w2:w2};
+  }
+
+  function swapWord(widths){
+    swapEl.style.transition = 'width .55s cubic-bezier(.22,1,.36,1)';
+    swapEl.style.width = widths.w2 + 'px';
+    swapIn.style.transition = 'opacity .35s ease, transform .55s cubic-bezier(.22,1,.36,1)';
+    swapIn.style.opacity = '0';
+    swapIn.style.transform = 'translateY(-14px)';
+    setTimeout(function(){
+      swapIn.textContent = 'Forecast';
+      swapIn.style.transition = 'none';
+      swapIn.style.transform = 'translateY(14px)';
+      requestAnimationFrame(function(){
+        swapIn.style.transition = 'opacity .4s ease, transform .55s cubic-bezier(.22,1,.36,1)';
+        swapIn.style.opacity = '1';
+        swapIn.style.transform = 'none';
+      });
+    }, 300);
+  }
+
+  function drawPath(el, dur, delay){
+    var len = el.getTotalLength();
+    el.style.strokeDasharray = (el.classList.contains('fore') ? '5 5' : len + ' ' + len);
+    if(!el.classList.contains('fore')){
+      el.style.strokeDashoffset = len;
+    } else {
+      el.style.opacity = '0';
+    }
+    el.style.transition = 'stroke-dashoffset '+dur+'ms cubic-bezier(.22,1,.36,1) '+delay+'ms, opacity 500ms ease '+delay+'ms';
+    requestAnimationFrame(function(){
+      el.style.strokeDashoffset = '0';
+      el.style.opacity = '1';
+    });
+  }
+
+  function assemble(){
+    if(reduce){
+      swapIn.textContent = 'Forecast';
+      swapEl.style.width = 'auto';
+      railItems.forEach(function(li){ li.classList.add('in'); });
+      band.style.opacity = '.12';
+      return;
+    }
+    var widths = sizeSwap();
+    band.style.opacity = '0';
+    band.style.transform = 'scaleY(.2)';
+    band.style.transformOrigin = '0 100%';
+    band.style.transition = 'opacity .65s ease 500ms, transform .85s cubic-bezier(.16,1,.3,1) 500ms';
+    endN.style.opacity = '0'; endG.style.opacity = '0';
+    endN.style.transition = endG.style.transition = 'opacity .45s ease 1250ms';
+
+    drawPath(actual, 1050, 120);
+
+    setTimeout(function(){ swapWord(widths); }, 900);
+
+    setTimeout(function(){
+      drawPath(fore, 650, 0);
+      band.style.opacity = '.12';
+      band.style.transform = 'none';
+      endN.style.opacity = '1'; endG.style.opacity = '.18';
+    }, 700);
+
+    railItems.forEach(function(li, i){
+      setTimeout(function(){ li.classList.add('in'); }, 950 + i*60);
+    });
+  }
+
+  if('IntersectionObserver' in window){
+    var heroObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){ assemble(); heroObs.disconnect(); }
+      });
+    }, {threshold:.15});
+    heroObs.observe(document.getElementById('instrument'));
+  } else { assemble(); }
+
+  /* ---------- SECTION REVEALS ---------- */
+  var revealables = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window && !reduce){
+    var ro = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){ e.target.classList.add('in'); ro.unobserve(e.target); }
+      });
+    }, {rootMargin:'0px 0px -18% 0px', threshold:.05});
+    revealables.forEach(function(el){ ro.observe(el); });
+  } else {
+    revealables.forEach(function(el){ el.classList.add('in'); });
+  }
+
+  /* ---------- SCENARIO RECALIBRATION ---------- */
+  var prob = document.getElementById('prob'),
+      probOut = document.getElementById('probOut'),
+      mValue = document.getElementById('mValue'),
+      mConf = document.getElementById('mConf'),
+      mUpside = document.getElementById('mUpside'),
+      mDays = document.getElementById('mDays'),
+      scenOut = document.getElementById('scenOut'),
+      scFore = document.getElementById('scFore'),
+      scNode = document.getElementById('scNode');
+
+  var PIPELINE = 2927000, BASE_COMMIT = 2220000;
+  var current = {val: 2400000, conf: 82, days: 27}, animId = null;
+
+  function model(p){
+    var value = Math.round(PIPELINE * p / 100);
+    var conf  = Math.max(42, Math.round(82 - Math.abs(p - 82) * 0.35));
+    var days  = 27 + Math.round((82 - p) * 0.6);
+    return {value:value, conf:conf, days:days, upside:value - BASE_COMMIT};
+  }
+  function money(n){
+    var s = n < 0 ? '-$' : '+$';
+    n = Math.abs(n);
+    return s + (n >= 1000 ? (n/1000).toFixed(0) + 'K' : n);
+  }
+  function moneyM(n){ return '$' + (n/1000000).toFixed(1) + 'M'; }
+
+  function render(state, p){
+    mValue.textContent = moneyM(state.val);
+    mConf.textContent = state.conf + '%';
+    mUpside.textContent = money(state.upside);
+    mUpside.classList.toggle('hot', state.upside > 0);
+    mDays.textContent = state.days;
+    scenOut.innerHTML = 'At <b>' + p + '%</b> win probability, the quarter closes at <b>' + moneyM(state.val) +
+      '</b> with <b>' + state.days + ' days</b> to close.';
+    // endpoint interpolation on the forecast line
+    var y = 44 + (82 - state.conf) * 0.55 + (82 - p) * 0.18;
+    y = Math.max(22, Math.min(74, y));
+    scFore.setAttribute('points', '360,88 440,' + (88 - (88-y)*0.35).toFixed(1) + ' 520,' + (88 - (88-y)*0.68).toFixed(1) + ' 600,' + y.toFixed(1));
+    scNode.setAttribute('cy', y.toFixed(1));
+  }
+
+  function animateTo(target, p){
+    if(animId) cancelAnimationFrame(animId);
+    if(reduce){ current = {val:target.value, conf:target.conf, days:target.days}; render({val:target.value, conf:target.conf, days:target.days, upside:target.upside}, p); return; }
+    var start = Object.assign({}, current), t0 = performance.now(), dur = 420;
+    (function step(now){
+      var k = Math.min(1, (now - t0)/dur);
+      var e = 1 - Math.pow(1 - k, 3);
+      var st = {
+        val: start.val + (target.value - start.val)*e,
+        conf: start.conf + (target.conf - start.conf)*e,
+        days: start.days + (target.days - start.days)*e
+      };
+      st.upside = st.val - BASE_COMMIT;
+      render({val:Math.round(st.val), conf:Math.round(st.conf), days:Math.round(st.days), upside:Math.round(st.upside)}, p);
+      if(k < 1){ animId = requestAnimationFrame(step); }
+      else { current = {val:target.value, conf:target.conf, days:target.days}; animId = null; }
+    })(performance.now());
+  }
+
+  function onInput(){
+    var p = parseInt(prob.value, 10);
+    probOut.textContent = p + '%';
+    prob.setAttribute('aria-valuetext', p + ' percent win probability');
+  }
+  function onRelease(){
+    var p = parseInt(prob.value, 10);
+    var m = model(p);
+    animateTo(m, p);
+    var live = document.getElementById('scenOut');
+    live.style.opacity = '0';
+    setTimeout(function(){ live.style.opacity = '1'; }, 120);
+  }
+  prob.addEventListener('input', onInput);
+  prob.addEventListener('change', onRelease);
+  prob.addEventListener('keyup', function(e){ if(e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End'){ onRelease(); } });
+
+  /* ---------- USE CASE SEGMENTS ---------- */
+  var segments = {
+    lead: [
+      'Where is the quarter exposed?',
+      'Which regions are carrying the plan?',
+      'What changed since Monday?',
+      'Which commits have evidence behind them?',
+      'Where is upside going uncounted?',
+      'What do I tell the board on Thursday?'
+    ],
+    mgr: [
+      'Which deals need intervention today?',
+      'Who is carrying pipeline they cannot explain?',
+      'What is slipping and by how many days?',
+      'Which deals have gone quiet?',
+      'Where should I spend my coaching hours?',
+      'What does each rep owe me before Friday?'
+    ],
+    rev: [
+      'Why did the total move overnight?',
+      'Which source is disagreeing with the CRM?',
+      'Where are the duplicate contacts coming from?',
+      'Which field changes broke the model?',
+      'How do I reconcile billing with pipeline?',
+      'What needs a named owner before review?'
+    ]
+  };
+  var ucRows = document.getElementById('ucRows');
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.seg [role=tab]'));
+
+  function paintRows(key){
+    ucRows.innerHTML = '';
+    segments[key].forEach(function(txt, i){
+      var li = document.createElement('li');
+      li.innerHTML = '<span class="ix">' + String(i+1).padStart(2,'0') + '</span><span>' + txt + '</span>' +
+        '<span class="ar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>';
+      ucRows.appendChild(li);
+      if(reduce){ li.classList.add('in'); }
+      else { setTimeout(function(){ li.classList.add('in'); }, 60 + i*55); }
+    });
+  }
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){
+      tabs.forEach(function(x){ x.setAttribute('aria-selected', x === t ? 'true' : 'false'); });
+      ucRows.setAttribute('aria-labelledby', t.id);
+      paintRows(t.dataset.seg);
+    });
+    t.addEventListener('keydown', function(e){
+      var i = tabs.indexOf(t), n = null;
+      if(e.key === 'ArrowRight') n = tabs[(i+1)%tabs.length];
+      if(e.key === 'ArrowLeft')  n = tabs[(i-1+tabs.length)%tabs.length];
+      if(n){ e.preventDefault(); n.focus(); n.click(); }
+    });
+  });
+  paintRows('lead');
+
+  /* ---------- EVIDENCE NODE RING ---------- */
+  var evG = document.getElementById('evNodes');
+  if(evG){
+    for(var i=0;i<16;i++){
+      var a = (i/16) * Math.PI * 2 - Math.PI/2;
+      var r = (i % 3 === 0) ? 82 : 118;
+      var x = 190 + Math.cos(a)*r, y = 160 + Math.sin(a)*r;
+      var c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx', x.toFixed(1)); c.setAttribute('cy', y.toFixed(1));
+      c.setAttribute('r', (i % 4 === 0) ? 4.5 : 3);
+      c.setAttribute('fill', i % 5 === 0 ? '#B9FF5C' : (i % 3 === 0 ? '#6ED8FF' : '#566172'));
+      evG.appendChild(c);
+    }
+  }
+
+  /* ---------- FINAL CTA: SIGNAL RAIL ---------- */
+  var railMove = document.getElementById('railMove'),
+      railBand = document.getElementById('railBand');
+  var ticks = [
+    ['v','Acme / commit raised to $420K'], ['','Snowflake / usage +24%'],
+    ['r','Northstar / stakeholder silent 12d'], ['f','Orbit / 6 AE roles opened'],
+    ['v','Meridian / evidence attached'], ['','HubSpot / activity synced'],
+    ['r','Kestrel / close date +14d'], ['v','Vela / champion confirmed'],
+    ['','Billing / invoice matched'], ['f','Halden / pricing note tagged'],
+    ['v','Forecast / 82% confidence'], ['','18 sources / 1 operating view']
+  ];
+  function buildRail(){
+    var html = '';
+    for(var pass=0; pass<2; pass++){
+      ticks.forEach(function(t){
+        html += '<span class="rail-item"><span class="d '+t[0]+'"></span>'+t[1]+'</span>';
+      });
+    }
+    railMove.innerHTML = html;
+  }
+  buildRail();
+  if(reduce){ railMove.style.animation = 'none'; }
+  ['mouseenter','focusin'].forEach(function(ev){ railBand.addEventListener(ev, function(){ railBand.classList.add('paused'); }); });
+  ['mouseleave','focusout'].forEach(function(ev){ railBand.addEventListener(ev, function(){ railBand.classList.remove('paused'); }); });
+
+  /* ---------- REDUCED MOTION: freeze SMIL pulses ---------- */
+  if(reduce){
+    var connSvg = document.getElementById('connSvg');
+    if(connSvg && connSvg.pauseAnimations) connSvg.pauseAnimations();
+  }
+})();
+</script>
+</body>
+</html>
