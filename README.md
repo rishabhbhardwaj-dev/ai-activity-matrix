@@ -1,6 +1,6 @@
  <div align="center">
 
-# ⚡ AI Activity Matrixx_ ⚡
+# ⚡ _AI Activity Matrixx_ ⚡
 
 
 
